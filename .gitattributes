@@ -1,0 +1,18 @@
+# Default: normalise text to LF in the repository, check out native.
+# This is the catch-all and must come FIRST — in .gitattributes the last
+# matching rule wins, so anything listed below overrides it.
+* text=auto
+
+# Treat these as binary: never convert line endings, never diff as text.
+# Cowork_Overview.pdf is an uncompressed PDF with no NUL bytes, so without
+# this git guesses "text" and CRLF conversion on checkout corrupts it.
+*.pdf   binary
+*.docx  binary
+*.jpg   binary
+*.jpeg  binary
+*.png   binary
+*.gif   binary
+*.ico   binary
+*.xlsx  binary
+*.pptx  binary
+*.pyc   binary
