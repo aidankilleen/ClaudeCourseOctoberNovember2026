@@ -1,0 +1,25 @@
+I want to build a one-page brochure website for my training company, "Professional Training", in this empty directory. Before writing any code, briefly explain your plan and wait for my approval.
+
+## Tech stack
+- Backend: Python 3.12+ with Flask
+- Templates: Jinja2
+- Styling: plain CSS (no frameworks or build tools)
+- No database and no git repository
+
+## Page content
+Create a single page with these sections, filled with realistic placeholder text I can edit later:
+1. Header with the company name and simple navigation links that scroll to each section
+2. Hero section with a headline, short tagline, and a "Contact Us" button
+3. About Us: a short paragraph about the company
+4. Courses: 4–6 example training courses, each with a title, short description, and duration
+5. Why Choose Us: 3–4 key benefits
+6. Testimonials: 2–3 placeholder client quotes
+7. Contact: placeholder email, phone number, and address
+8. Footer with copyright notice
+
+## Requirements
+- Keep all editable text (company details, courses, testimonials, contact info) in one separate file, such as content.py, so I can update the content without touching the HTML
+- Make the design clean, professional, and mobile-friendly
+- Add a short README explaining how to install, run, and edit the content
+- Start the server and check the page loads before telling me you're done
+- Keep the code simple and easy for a beginner to follow

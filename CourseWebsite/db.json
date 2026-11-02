@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title": "Leadership Essentials",
+    "description": "For new and recently promoted managers. Covers delegation, giving feedback that lands, and handling difficult conversations without losing the room.",
+    "duration": "2 days"
+  },
+  {
+    "title": "Project Management Fundamentals",
+    "description": "Planning, scoping and tracking work that finishes on time.",
+    "duration": "2 days",
+    "id": 2
+  },
+  {
+    "id": 3,
+    "title": "Effective Communication at Work",
+    "description": "Write clearer emails, run shorter meetings and present ideas so that people remember them. Includes a recorded practice session with individual feedback.",
+    "duration": "1 day"
+  },
+  {
+    "id": 4,
+    "title": "Data Analysis with Excel",
+    "description": "Turn messy spreadsheets into reports people trust. Pivot tables, lookups, charts and the handful of formulas that do most of the work.",
+    "duration": "2 days"
+  },
+  {
+    "id": 5,
+    "title": "Customer Service Excellence",
+    "description": "Handle complaints calmly, recover unhappy customers and build the kind of service reputation that brings repeat business.",
+    "duration": "1 day"
+  }
+]

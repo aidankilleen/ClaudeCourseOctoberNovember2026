@@ -1,0 +1,30 @@
+# Python bytecode — regenerated on every run
+__pycache__/
+*.py[cod]
+
+# Virtual environments — machine-local, never shared
+.venv/
+venv/
+env/
+
+# Runtime state, rewritten by the app itself every time it closes
+CoworkInvestigation/pyclock/pyclock_settings.json
+
+# Scratch output of the last invoice-extractor run, overwritten each time.
+# The Skill regenerates it; it is not a source file.
+InvoiceProcessor/invoice-output.*
+
+# Two sample invoices held back from the repository.
+# Both spellings are listed because the file is Invoice2.pdf in some folders
+# and invoice2.pdf in others, and gitignore matching is case-sensitive.
+invoice1.pdf
+Invoice1.pdf
+invoice3.pdf
+Invoice3.pdf
+
+# Editor and OS clutter
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.swp

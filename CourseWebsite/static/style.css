@@ -1,0 +1,309 @@
+/* ---------------------------------------------------------------------------
+   Professional Training - stylesheet
+   Colours and spacing live in the :root block below, so you can restyle the
+   whole site by changing a few values here.
+---------------------------------------------------------------------------- */
+
+:root {
+  --navy: #10243f;
+  --navy-light: #1d3a5f;
+  --accent: #0e9488;
+  --accent-dark: #0b7a70;
+  --text: #22303f;
+  --text-muted: #5b6b7c;
+  --bg: #ffffff;
+  --bg-alt: #f4f7fa;
+  --border: #e1e8ef;
+
+  --max-width: 1080px;
+  --gap: 1.75rem;
+  --radius: 10px;
+}
+
+/* --- Base ---------------------------------------------------------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Stops the sticky header from covering a section heading when you jump to it. */
+  scroll-padding-top: 5rem;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--text);
+  background: var(--bg);
+}
+
+h1, h2, h3 {
+  line-height: 1.25;
+  color: var(--navy);
+  margin-top: 0;
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3rem); }
+h2 { font-size: clamp(1.6rem, 3.5vw, 2.1rem); margin-bottom: 1.5rem; }
+h3 { font-size: 1.2rem; margin-bottom: 0.6rem; }
+
+p { margin-top: 0; }
+
+a {
+  color: var(--accent-dark);
+}
+
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.container.narrow {
+  max-width: 760px;
+}
+
+.lead {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+/* --- Header -------------------------------------------------------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--navy);
+  box-shadow: 0 1px 6px rgba(16, 36, 63, 0.18);
+}
+
+.header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+}
+
+.brand {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.4rem;
+}
+
+.nav a {
+  color: #cfdbe8;
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 0.15rem 0;
+  border-bottom: 2px solid transparent;
+}
+
+.nav a:hover,
+.nav a:focus {
+  color: #ffffff;
+  border-bottom-color: var(--accent);
+}
+
+/* --- Hero ---------------------------------------------------------------- */
+
+/* The photo sits under a dark navy wash so the white text stays readable.
+   To swap the picture, drop a new file into static/images/ and change the
+   url(...) below. To remove it, delete the url(...) line and its comma. */
+.hero {
+  background-image:
+    linear-gradient(160deg, rgba(16, 36, 63, 0.92) 0%, rgba(29, 58, 95, 0.82) 100%),
+    url("images/hero.jpg");
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+  padding: clamp(3.5rem, 10vw, 6.5rem) 0;
+}
+
+.hero-inner {
+  max-width: 760px;
+}
+
+/* The promotional badge above the headline. It only appears when HERO has an
+   "offer" line in content.py. */
+.hero-offer {
+  display: inline-block;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  margin-bottom: 1.25rem;
+}
+
+.hero h1 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.hero-tagline {
+  font-size: 1.15rem;
+  color: #cfdbe8;
+  margin-bottom: 2rem;
+}
+
+.button {
+  display: inline-block;
+  background: var(--accent);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.85rem 2rem;
+  border-radius: var(--radius);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.button:hover,
+.button:focus {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+/* --- Sections ------------------------------------------------------------ */
+
+.section {
+  padding: clamp(3rem, 7vw, 4.5rem) 0;
+}
+
+.section-alt {
+  background: var(--bg-alt);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Cards reflow from several columns to one on narrow screens by themselves. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--gap);
+}
+
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.6rem;
+  box-shadow: 0 1px 3px rgba(16, 36, 63, 0.05);
+}
+
+.card p {
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.duration {
+  margin-top: 1rem !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-dark) !important;
+}
+
+.benefit {
+  border-top: 3px solid var(--accent);
+}
+
+/* --- Testimonials -------------------------------------------------------- */
+
+.quote {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.quote blockquote {
+  margin: 0 0 1.25rem;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.quote figcaption {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+}
+
+.quote-name {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.quote-role {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* --- Contact ------------------------------------------------------------- */
+
+.contact-list {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+}
+
+.contact-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contact-label {
+  min-width: 90px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+/* --- Footer -------------------------------------------------------------- */
+
+.site-footer {
+  background: var(--navy);
+  color: #a9bccf;
+  padding: 1.75rem 0;
+  font-size: 0.9rem;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+/* --- Small screens ------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav {
+    gap: 0.25rem 1.1rem;
+  }
+}

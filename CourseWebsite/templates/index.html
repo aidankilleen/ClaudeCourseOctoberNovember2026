@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ c.COMPANY.name }} — {{ c.COMPANY.tagline }}</title>
+  <meta name="description" content="{{ c.COMPANY.tagline }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- Header and navigation -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top">{{ c.COMPANY.name }}</a>
+      <nav class="nav">
+        {% for link in c.NAV %}
+          <a href="{{ link.href }}">{{ link.label }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-inner">
+        {% if c.HERO.offer %}
+        <p class="hero-offer">{{ c.HERO.offer }}</p>
+        {% endif %}
+        <h1>{{ c.HERO.headline }}</h1>
+        <p class="hero-tagline">{{ c.HERO.tagline }}</p>
+        <a class="button" href="{{ c.HERO.button_href }}">{{ c.HERO.button_label }}</a>
+      </div>
+    </section>
+
+    <!-- About Us -->
+    <section id="about" class="section">
+      <div class="container narrow">
+        <h2>{{ c.ABOUT.heading }}</h2>
+        <p class="lead">{{ c.ABOUT.paragraph }}</p>
+      </div>
+    </section>
+
+    <!-- Courses -->
+    <section id="courses" class="section section-alt">
+      <div class="container">
+        <h2>Courses</h2>
+        <div class="grid">
+          {% for course in c.COURSES %}
+            <article class="card">
+              <h3>{{ course.title }}</h3>
+              <p>{{ course.description }}</p>
+              <p class="duration">{{ course.duration }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section id="why-us" class="section">
+      <div class="container">
+        <h2>Why Choose Us</h2>
+        <div class="grid">
+          {% for benefit in c.BENEFITS %}
+            <article class="card benefit">
+              <h3>{{ benefit.title }}</h3>
+              <p>{{ benefit.description }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="section section-alt">
+      <div class="container">
+        <h2>What Our Clients Say</h2>
+        <div class="grid">
+          {% for item in c.TESTIMONIALS %}
+            <figure class="card quote">
+              <blockquote>“{{ item.quote }}”</blockquote>
+              <figcaption>
+                <span class="quote-name">{{ item.name }}</span>
+                <span class="quote-role">{{ item.role }}</span>
+              </figcaption>
+            </figure>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="section">
+      <div class="container narrow">
+        <h2>{{ c.CONTACT.heading }}</h2>
+        <p class="lead">{{ c.CONTACT.intro }}</p>
+        <ul class="contact-list">
+          <li>
+            <span class="contact-label">Email</span>
+            <a href="mailto:{{ c.CONTACT.email }}">{{ c.CONTACT.email }}</a>
+          </li>
+          <li>
+            <span class="contact-label">Phone</span>
+            <a href="tel:{{ c.CONTACT.phone | replace(' ', '') }}">{{ c.CONTACT.phone }}</a>
+          </li>
+          <li>
+            <span class="contact-label">Address</span>
+            <span>{{ c.CONTACT.address }}</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; {{ year }} {{ c.COMPANY.name }}. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
