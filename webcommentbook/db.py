@@ -100,6 +100,15 @@ def ensure_schema():
     is already there and adds only the missing pieces. Both steps below are
     safe to run every single time the application starts, and neither of them
     changes or removes an existing row.
+
+    They are also safe to run several times at once. On the live server
+    gunicorn starts three copies of the application together, and all three
+    reach this function within the same moment. Each one can therefore look at
+    the database, see the same missing column, and try to add it - so the
+    second and third have to expect that the job is already done rather than
+    falling over. That is exactly what happened the first time this was
+    deployed: two workers tried to add the column, one of them failed, and the
+    site was down until systemd restarted it.
     """
     connection = get_connection()
     try:
@@ -111,9 +120,17 @@ def ensure_schema():
         if existing and "blocked" not in existing:
             # An older database, from before moderation existed. Everything
             # already in it was visible, and DEFAULT 0 keeps it that way.
-            connection.execute(
-                "ALTER TABLE comments ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0"
-            )
+            try:
+                connection.execute(
+                    "ALTER TABLE comments ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0"
+                )
+            except sqlite3.OperationalError as problem:
+                # "duplicate column name" means another copy of the application
+                # added it a fraction of a second ago. That is the result we
+                # wanted, so there is nothing to report. Any other complaint
+                # from SQLite is a genuine problem and is allowed through.
+                if "duplicate column name" not in str(problem):
+                    raise
 
         # IF NOT EXISTS does the same job for a whole table that the check
         # above does for a single column.
