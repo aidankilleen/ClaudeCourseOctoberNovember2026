@@ -210,7 +210,13 @@ a { color: var(--accent); }
     font-size: 0.95rem;
 }
 
+/* Every kind of box a person types into gets the same look. The types are
+   listed one by one rather than written as a bare "input", because an input
+   can also be a radio button or a checkbox, and those should not be stretched
+   across the whole form. A new type of field needs adding here, or it falls
+   back to the browser's own small grey box and looks out of place. */
 .comment-form input[type="text"],
+.comment-form input[type="password"],
 .comment-form textarea {
     width: 100%;
     padding: 0.55rem 0.7rem;
@@ -223,6 +229,7 @@ a { color: var(--accent); }
 }
 
 .comment-form input[type="text"]:focus,
+.comment-form input[type="password"]:focus,
 .comment-form textarea:focus {
     outline: 2px solid var(--accent);
     outline-offset: 1px;
@@ -297,4 +304,138 @@ code {
     .site-header .wrap { flex-direction: column; align-items: flex-start; }
     .comment-head { flex-direction: column; gap: 0.15rem; }
     .hero .button { display: block; margin: 0 0 0.6rem; text-align: center; }
+    .admin-tools { flex-direction: column; align-items: stretch; }
 }
+
+
+/* --- the moderator's pages ------------------------------------------------
+
+   Everything below is used only by the pages under /admin. The public pages
+   are untouched by it.                                                      */
+
+/* A table of seven columns does not fit in the 48rem reading width the rest
+   of the site uses, so the admin pages ask for this wider one instead. */
+.wrap.wide { max-width: 64rem; }
+
+/* The search and filter row. Like every other layout here it is flexbox, and
+   wrap means the controls drop onto a second line rather than overflowing. */
+.admin-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    margin: 0 0 1.5rem;
+}
+.admin-tools label { font-size: 0.9rem; color: var(--ink-soft); }
+.admin-tools input[type="search"],
+.admin-tools select {
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--ink);
+}
+.admin-tools input[type="search"] { flex: 1 1 14rem; }
+
+/* --- the grid of comments ------------------------------------------------ */
+
+/* A real table, not a grid of boxes: this is tabular data, and a table is
+   what a screen reader needs in order to read "Rating" before each rating.
+
+   The wrapper scrolls sideways on a narrow screen. Without it the columns are
+   squeezed until every comment is one word wide. */
+.grid-scroll { overflow-x: auto; }
+
+table.grid {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+.grid th {
+    text-align: left;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--line);
+    padding: 0.7rem 0.75rem;
+    white-space: nowrap;
+}
+.grid td {
+    border-bottom: 1px solid var(--line);
+    padding: 0.7rem 0.75rem;
+    vertical-align: top;
+}
+.grid tbody tr:last-child td { border-bottom: 0; }
+
+.grid-id { color: var(--ink-soft); }
+.grid-date { white-space: nowrap; color: var(--ink-soft); font-size: 0.9rem; }
+.grid-rating { color: var(--star); white-space: nowrap; }
+/* Comments are the one column allowed to be wide, since they are the thing
+   being read. */
+.grid-text { min-width: 18rem; }
+
+/* A blocked row is tinted and faded, so that a glance down the grid shows
+   which comments are already dealt with. */
+.grid tr.blocked { background: var(--error-bg); }
+.grid tr.blocked .grid-text { color: var(--ink-soft); }
+
+/* The two buttons on each row sit side by side, and stack when there is no
+   room. */
+.grid-actions { white-space: nowrap; }
+.grid-actions form { display: inline; }
+.grid-actions .button { margin: 0 0.2rem 0.2rem 0; }
+
+/* --- badges and the smaller buttons -------------------------------------- */
+
+.badge {
+    display: inline-block;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+}
+.badge.blocked {
+    background: var(--error-bg);
+    border-color: var(--error-ink);
+    color: var(--error-ink);
+}
+
+/* A smaller button for the rows of the grid, where the full-sized one would
+   make every row twice as tall. */
+.button.small { padding: 0.25rem 0.6rem; font-size: 0.85rem; }
+
+/* The one destructive button on the site. Red rather than the usual green,
+   because deleting a comment cannot be undone and the colour should say so
+   before the click rather than after it. */
+.button.danger { background: var(--error-ink); }
+.button.danger:hover { background: #6f201b; color: #fff; }
+
+/* --- a comment that was taken down --------------------------------------- */
+
+/* Shown on the public pages in place of the words. Italic and grey so that it
+   reads as a note from the site rather than as something somebody wrote. */
+.comment-text.removed { font-style: italic; color: var(--ink-soft); }
+
+/* --- the sign-out line in the footer ------------------------------------- */
+
+.signout {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.7rem 0 0;
+}
+
+/* A closing note under the grid, a little quieter than the grid itself. */
+.note { margin-top: 1.2rem; max-width: 40rem; }

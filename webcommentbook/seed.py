@@ -3,7 +3,8 @@
   ****************************************************************
   *  WARNING: running this THROWS AWAY whatever is in the        *
   *  database and starts again. Any comment added through the    *
-  *  website or the API is lost.                                 *
+  *  website or the API is lost, and so is every moderator       *
+  *  account.                                                    *
   ****************************************************************
 
 Run it once before starting the application for the first time:
@@ -13,15 +14,27 @@ Run it once before starting the application for the first time:
 Run it again whenever you want a clean slate. If you want a different set of
 starting comments, edit SAMPLE_COMMENTS below - this file is the record of
 what the site starts out with.
+
+To add a moderator to a site that is already running, use create_admin.py
+instead. It leaves the comments alone.
 """
 
 import os
+
+from werkzeug.security import generate_password_hash
 
 import db
 
 # The comments the site starts with. Dates are ISO 8601 text, which is how they
 # are stored, and the ratings deliberately vary so the stars on the page are
 # worth looking at.
+# The one moderator the site starts with. Taking these from the environment
+# means a real password need never be written down in this file; the fallback
+# of admin/admin is there so that the site works the moment you have seeded it
+# on your own machine, and is no use to anybody anywhere else.
+ADMIN_USERNAME = os.environ.get("WEBCOMMENTBOOK_ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("WEBCOMMENTBOOK_ADMIN_PASSWORD", "admin")
+
 SAMPLE_COMMENTS = [
     {
         "date": "2026-10-12T09:15:00",
@@ -69,7 +82,7 @@ SAMPLE_COMMENTS = [
 
 
 def build_database():
-    """Drop the old tables, create them again, and insert the sample rows."""
+    """Drop the old tables, create them again, and insert the starting rows."""
     # schema.sql begins with DROP TABLE IF EXISTS, so running the whole file
     # clears out anything that was there before.
     with open(db.SCHEMA_PATH, "r", encoding="utf-8") as schema_file:
@@ -78,10 +91,21 @@ def build_database():
     connection = db.get_connection()
     try:
         connection.executescript(schema_sql)
+        # The comments do not mention the blocked column at all: it has a
+        # DEFAULT of 0 in schema.sql, so every sample comment starts visible
+        # without this having to say so.
         connection.executemany(
             "INSERT INTO comments (date, name, comment, rating) "
             "VALUES (:date, :name, :comment, :rating)",
             SAMPLE_COMMENTS,
+        )
+
+        # What is stored is a one-way hash, never the password itself - see
+        # the comment on the admins table in schema.sql.
+        connection.execute(
+            "INSERT INTO admins (username, password_hash, created) "
+            "VALUES (?, ?, datetime('now'))",
+            (ADMIN_USERNAME, generate_password_hash(ADMIN_PASSWORD)),
         )
         connection.commit()
     finally:
@@ -98,5 +122,13 @@ if __name__ == "__main__":
         print("Created a new database.")
     print("Database file: " + db.DATABASE_PATH)
     print("Inserted %d sample comments." % len(SAMPLE_COMMENTS))
+    print("Created the moderator '%s'." % ADMIN_USERNAME)
+
+    if ADMIN_PASSWORD == "admin":
+        print("")
+        print("That account's password is 'admin'. That is fine on your own")
+        print("machine and nowhere else - on a real server, set a password")
+        print("with create_admin.py instead.")
+
     print("")
     print("Now run:  python app.py    and open http://127.0.0.1:5001")

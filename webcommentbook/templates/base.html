@@ -16,17 +16,22 @@
 <body>
 
 <header class="site-header">
-    <div class="wrap">
+    <div class="wrap {% block wrap_class %}{% endblock %}">
         <a class="brand" href="{{ url_for('home') }}">Comment&nbsp;Book</a>
         <nav>
             <a href="{{ url_for('home') }}">Home</a>
             <a href="{{ url_for('comments_page') }}">Comments</a>
+            {# current_admin is filled in for every template by app.py. It is
+               the name of the logged-in moderator, or nothing at all. #}
+            {% if current_admin %}
+                <a href="{{ url_for('admin_page') }}">Admin</a>
+            {% endif %}
             <a class="button" href="{{ url_for('add_comment_page') }}">Leave a comment</a>
         </nav>
     </div>
 </header>
 
-<main class="wrap">
+<main class="wrap {{ self.wrap_class() }}">
     {# Any one-off message set with flash(), for example after a comment is
        added. There is usually nothing here at all. #}
     {% with messages = get_flashed_messages() %}
@@ -41,10 +46,21 @@
 </main>
 
 <footer class="site-footer">
-    <div class="wrap">
+    <div class="wrap {{ self.wrap_class() }}">
         <p>webcommentbook &mdash; a small Flask and SQLite example.
            The comments are also available as JSON at
            <code>/api/comments</code>.</p>
+        {% if current_admin %}
+            {# The sign-out button is a form rather than a link, so that it
+               takes a deliberate click to use. A link can be followed by
+               anything - a browser quietly fetching a page in advance, for
+               instance - and nobody should be signed out by accident. #}
+            <form class="signout" method="post" action="{{ url_for('admin_logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <span class="muted">Signed in as {{ current_admin }}.</span>
+                <button type="submit" class="button small secondary">Sign out</button>
+            </form>
+        {% endif %}
     </div>
 </footer>
 

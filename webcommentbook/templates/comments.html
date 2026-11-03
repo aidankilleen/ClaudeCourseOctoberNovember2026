@@ -26,7 +26,14 @@
                 <span class="comment-name">{{ comment.name }}</span>
                 <span class="comment-rating" title="{{ comment.rating }} out of 5">{{ comment.rating|stars }}</span>
             </div>
-            <p class="comment-text">{{ comment.comment }}</p>
+            {# A comment a moderator has taken down keeps its place here, but
+               app.py has already replaced the words before they ever reached
+               this page. The class only changes how the note looks. #}
+            {% if comment.blocked %}
+                <p class="comment-text removed">{{ comment.comment }}</p>
+            {% else %}
+                <p class="comment-text">{{ comment.comment }}</p>
+            {% endif %}
             <p class="comment-date">
                 {{ comment.date|friendly_date }}
                 <span class="comment-id">#{{ comment.id }}</span>

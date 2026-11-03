@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Moderate comments &mdash; Comment Book{% endblock %}
+
+{# The admin pages are the only ones wide enough for a table of seven columns.
+   The public pages keep the narrower reading width. #}
+{% block wrap_class %}wide{% endblock %}
+
+{% block content %}
+
+<h1>Moderate comments</h1>
+<p class="lead">
+    {{ total }} {{ "comment" if total == 1 else "comments" }} in total,
+    {{ blocked_total }} of them blocked.
+</p>
+
+{# An ordinary form with method="get". Submitting it simply reloads this same
+   page with ?q=&status=&sort= on the end, which is why the search needs no
+   JavaScript at all - the server does the work and the address bar ends up
+   describing exactly what you are looking at, so it can be bookmarked. #}
+<form class="admin-tools" method="get" action="{{ url_for('admin_page') }}">
+    <label for="q">Search</label>
+    <input type="search" id="q" name="q" value="{{ search }}"
+           placeholder="a name or a word in a comment">
+
+    <label for="status">Show</label>
+    <select id="status" name="status">
+        <option value="all" {% if status == 'all' %}selected{% endif %}>All comments</option>
+        <option value="visible" {% if status == 'visible' %}selected{% endif %}>Visible only</option>
+        <option value="blocked" {% if status == 'blocked' %}selected{% endif %}>Blocked only</option>
+    </select>
+
+    <label for="sort">Sort</label>
+    <select id="sort" name="sort">
+        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest first</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+        <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Highest rated</option>
+    </select>
+
+    <button type="submit" class="button">Search</button>
+    <a class="cancel" href="{{ url_for('admin_page') }}">Clear</a>
+</form>
+
+{% if comments %}
+
+<p class="muted">
+    Showing {{ comments|length }}
+    {{ "comment" if comments|length == 1 else "comments" }}.
+</p>
+
+{# The wrapper lets the table scroll sideways on a narrow screen rather than
+   squashing the columns into something unreadable. #}
+<div class="grid-scroll">
+<table class="grid">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Rating</th>
+            <th>Comment</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for comment in comments %}
+        <tr class="{{ 'blocked' if comment.blocked }}">
+            <td class="grid-id">{{ comment.id }}</td>
+            <td class="grid-date">{{ comment.date|friendly_date }}</td>
+            <td>{{ comment.name }}</td>
+            <td class="grid-rating" title="{{ comment.rating }} out of 5">{{ comment.rating|stars }}</td>
+
+            {# The moderator sees the real words even when a comment is
+               blocked. Everywhere else on the site they are replaced - you
+               cannot judge a comment you are not allowed to read. #}
+            <td class="grid-text">{{ comment.comment }}</td>
+
+            <td>
+                {% if comment.blocked %}
+                    <span class="badge blocked">Blocked</span>
+                {% else %}
+                    <span class="badge">Visible</span>
+                {% endif %}
+            </td>
+
+            <td class="grid-actions">
+                {# Each button is its own little form, because each one is an
+                   action that changes something and so has to be a POST. The
+                   three hidden fields carry the current search along, so that
+                   after the action you land back on the same view. #}
+                <form method="post"
+                      action="{{ url_for('admin_block_comment', comment_id=comment.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="q" value="{{ search }}">
+                    <input type="hidden" name="status" value="{{ status }}">
+                    <input type="hidden" name="sort" value="{{ sort }}">
+                    {% if comment.blocked %}
+                        <input type="hidden" name="action" value="unblock">
+                        <button type="submit" class="button small secondary">Unblock</button>
+                    {% else %}
+                        <input type="hidden" name="action" value="block">
+                        <button type="submit" class="button small">Block</button>
+                    {% endif %}
+                </form>
+
+                {# Delete is a link to a confirmation page rather than a button
+                   that acts at once, because it cannot be undone. #}
+                <a class="button small danger"
+                   href="{{ url_for('admin_delete_comment', comment_id=comment.id,
+                                    q=search or None, status=status, sort=sort) }}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{# Said once, plainly, because it is a deliberate decision rather than
+   something missing: there is no edit button anywhere on this page. #}
+<p class="muted note">
+    A moderator can hide a comment or delete it, but never reword it. Blocking
+    is reversible: the comment stays where it is and visitors are told it was
+    removed.
+</p>
+
+{% else %}
+    <p>No comments match that search.</p>
+{% endif %}
+
+{% endblock %}

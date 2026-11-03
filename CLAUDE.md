@@ -121,6 +121,16 @@ Live at **https://aidank.aitrainingcourses.ie**. Treat edits as changes to a rea
 - **Who may write:** `GET` and `POST /api/comments` are open, so anyone can read the
   comments and leave one — that is the point of the site. `PUT`, `PATCH` and `DELETE`
   require an `X-API-Key` header, and answer 503 rather than opening up if the key is unset.
+- **Moderation lives at `/admin`,** behind a username and password held (hashed) in the
+  `admins` table of `comments.db`. A moderator can block a comment — reversibly; visitors
+  then see "removed by a moderator" in its place — or delete it, but never edit its text.
+  Add or reset an account on the server with `./venv/bin/python create_admin.py`, which
+  touches only the `admins` table. **Never use `seed.py` for this** — it destroys every
+  comment. Set `WEBCOMMENTBOOK_HTTPS=1` in the unit file so the session cookie is marked
+  secure.
+- **The schema is upgraded in place, not re-seeded.** `db.ensure_schema()` runs at start-up
+  and adds any missing column or table without touching a row, which is how the live
+  database gained `blocked` and `admins`. A future schema change should go there too.
 
 Deploying is copying the changed files up and restarting the service. Copy only what
 changed, and never `comments.db`, the `venv/` or `__pycache__/` (the venv is Windows-built

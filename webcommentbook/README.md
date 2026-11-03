@@ -31,15 +31,63 @@ stop it.
 
 `seed.py` **wipes the database and starts again**, so only run it when you want
 a clean slate. If you want different starting comments, edit the list at the
-top of `seed.py` — that file is the record of what the site begins with.
+top of `seed.py` — that file is the record of what the site begins with. It also
+creates the moderator account `admin` with the password `admin`, which is fine
+on your own machine and nowhere else.
 
-## The three pages
+## The pages
 
 | Address | What it is |
 |---|---|
 | `/` | Homepage: what the site is, how many comments there are, the average rating, and the three most recent |
 | `/comments` | Every comment. `?sort=newest`, `?sort=oldest` or `?sort=rating` changes the order |
 | `/comments/new` | The form for leaving a comment |
+| `/admin/login` | Where a moderator signs in |
+| `/admin` | The moderator's grid of every comment, with a search box and a filter |
+
+## Moderating the comments
+
+Sign in at `/admin/login` and you get a table of every comment with two buttons
+on each row.
+
+**Block** hides a comment from visitors. The comment is not deleted: it keeps
+its place on the page, and where the words were, visitors read *"This comment
+was removed by a moderator."* The text is held back from the API as well, so
+there is no way round it. Block it again — the button now says **Unblock** —
+and the comment comes back exactly as it was. A blocked comment is also left
+out of the two figures on the homepage.
+
+**Delete** removes the comment from the database for good. It asks first,
+because there is no undo. If you are not certain, block it instead.
+
+There is deliberately **no way to edit the text of a comment**. A moderator can
+leave it, hide it, or remove it, so that anything on the site is either the
+visitor's own words or plainly marked as taken down.
+
+The search box matches a word in a name or in a comment, and the drop-downs
+filter by status and change the order. All three are an ordinary form: pressing
+Search just reloads the page with `?q=&status=&sort=` on the end, which means
+the address bar always describes what you are looking at and can be bookmarked.
+
+### Moderator accounts
+
+Accounts live in the `admins` table. What is stored is never the password
+itself, only a one-way hash of it, so a copy of the database does not hand
+anybody the account — and nothing can read a forgotten password back out.
+
+To add a moderator, or to give an existing one a new password:
+
+```powershell
+venv\Scripts\python create_admin.py              # asks for a username and a password
+venv\Scripts\python create_admin.py alice        # asks for alice's password only
+```
+
+The password is typed invisibly and asked for twice, and must be at least eight
+characters.
+
+**Use `create_admin.py`, not `seed.py`, on a site that is already running.**
+`create_admin.py` touches only the `admins` table; `seed.py` throws every
+comment away.
 
 ## What a comment is
 
@@ -50,6 +98,7 @@ top of `seed.py` — that file is the record of what the site begins with.
 | `name` | Who left it (up to 80 characters) |
 | `comment` | What they said (up to 2000 characters) |
 | `rating` | A whole number from 1 to 5, shown as stars |
+| `blocked` | `0` normally, `1` if a moderator has hidden it. You never type this either |
 
 ## The REST web service
 
@@ -66,7 +115,14 @@ program can read and change them without touching the HTML.
 | `DELETE /api/comments/3` | Remove it |
 
 Status codes: `200` fine, `201` created, `204` deleted, `400` what you sent was
-not valid, `404` no such comment.
+not valid, `401` you did not send the key, `404` no such comment, `503` the
+server has no key configured.
+
+The API never gives out the words of a blocked comment either — it is exactly
+as public as the page is. You get the same "removed by a moderator" text, and
+`blocked` set to `1`. Nor can the API hide or show a comment: `PATCH` quietly
+ignores a `blocked` field, because moderating is something a signed-in person
+does on `/admin`.
 
 Examples (the server must be running):
 
@@ -127,8 +183,14 @@ On the live server the key is set in the systemd service file, which only root
 can read. It is never stored in this repository.
 
 The same applies to `WEBCOMMENTBOOK_SECRET_KEY`, which Flask uses to sign the
-session cookie. There is a development fallback in `app.py` so the site runs
-locally with no setup; the server sets a real random one.
+session cookie — the cookie that remembers a moderator has signed in, as well as
+the one-off "thank you" message. A visitor cannot edit a signed cookie and make
+themselves an administrator. There is a development fallback in `app.py` so the
+site runs locally with no setup; the server sets a real random one.
+
+On a site served over HTTPS, set `WEBCOMMENTBOOK_HTTPS=1` as well. That tells
+the application to mark the session cookie as secure, so a browser will never
+send it over an unencrypted connection.
 
 ## The files
 
@@ -136,11 +198,17 @@ locally with no setup; the server sets a real random one.
 |---|---|
 | `app.py` | The web pages and the REST API — every address the site answers |
 | `db.py` | All the SQL, and the validation rules shared by the form and the API |
-| `schema.sql` | The single `comments` table |
-| `seed.py` | Rebuilds the database with the sample comments |
+| `schema.sql` | The `comments` and `admins` tables, used when building from scratch |
+| `seed.py` | Rebuilds the database with the sample comments and a default moderator |
+| `create_admin.py` | Adds a moderator, or resets a password, leaving the comments alone |
 | `templates/` | The HTML. `base.html` is the shared shell the others fill in |
 | `static/style.css` | The whole look of the site, hand-written, no framework |
 | `comments.db` | The database itself. Created by `seed.py`, not kept in git |
+
+A database that already exists is never rebuilt from `schema.sql`. When the
+application starts it calls `ensure_schema()` in `db.py`, which adds a missing
+column or table and leaves every row where it is — that is how the live site
+gained its `blocked` column without losing a single comment.
 
 Anything to do with the database is in `db.py`, so the validation rules live in
 one place and the form and the API can never disagree about what a valid

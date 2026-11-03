@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Sign in &mdash; Comment Book{% endblock %}
+
+{% block content %}
+
+<h1>Moderator sign in</h1>
+<p class="lead">Signing in lets you hide or delete a comment. It does not let
+   you change what anybody wrote.</p>
+
+{% if errors %}
+    {# The same error box the "leave a comment" form uses. The message is
+       deliberately vague: telling somebody that a username exists but the
+       password was wrong hands them half the answer. #}
+    <div class="errors">
+        <ul>
+            {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<form method="post" action="{{ url_for('admin_login') }}" class="comment-form">
+
+    {# This hidden value proves the form was served by this site a moment ago
+       and not by somebody else's page. app.py explains it in full. #}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" autocomplete="username"
+           required value="{{ values.username or '' }}">
+
+    <label for="password">Password</label>
+    {# type="password" is what makes the browser show dots instead of letters.
+       The password is never put back into the form after a failed attempt. #}
+    <input type="password" id="password" name="password"
+           autocomplete="current-password" required>
+
+    <div class="form-actions">
+        <button type="submit" class="button big">Sign in</button>
+        <a class="cancel" href="{{ url_for('home') }}">Cancel</a>
+    </div>
+
+</form>
+
+{% endblock %}

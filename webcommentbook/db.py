@@ -8,6 +8,10 @@ The validation rules for a comment also live in this file. The HTML form and
 the REST API both call validate_comment(), so there is exactly one place that
 decides what a valid comment looks like and the two routes can never drift
 apart.
+
+There are two tables: "comments", and "admins" for the people who are allowed
+to moderate them. A moderator can hide a comment or delete it, which is why
+comments carry a "blocked" flag.
 """
 
 import os
@@ -80,6 +84,53 @@ def execute(sql, args=()):
 
 
 # ---------------------------------------------------------------------------
+# Bringing an existing database up to date
+# ---------------------------------------------------------------------------
+
+def ensure_schema():
+    """Add anything the database is missing, without disturbing what is there.
+
+    This exists to solve one specific problem. seed.py builds the database by
+    running schema.sql, which begins by DROPping the tables - fine on your own
+    machine, a disaster on the live site, where every row is a comment a real
+    visitor left and there is no copy of it anywhere else.
+
+    So when this application grows a new column or a new table, the live
+    database is brought up to date by this function instead: it looks at what
+    is already there and adds only the missing pieces. Both steps below are
+    safe to run every single time the application starts, and neither of them
+    changes or removes an existing row.
+    """
+    connection = get_connection()
+    try:
+        # PRAGMA table_info asks SQLite to describe a table. Each row it
+        # returns describes one column, and row["name"] is that column's name.
+        rows = connection.execute("PRAGMA table_info(comments)").fetchall()
+        existing = [row["name"] for row in rows]
+
+        if existing and "blocked" not in existing:
+            # An older database, from before moderation existed. Everything
+            # already in it was visible, and DEFAULT 0 keeps it that way.
+            connection.execute(
+                "ALTER TABLE comments ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0"
+            )
+
+        # IF NOT EXISTS does the same job for a whole table that the check
+        # above does for a single column.
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS admins ("
+            "    id            INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "    username      TEXT    NOT NULL UNIQUE,"
+            "    password_hash TEXT    NOT NULL,"
+            "    created       TEXT    NOT NULL"
+            ")"
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+# ---------------------------------------------------------------------------
 # Reading comments
 # ---------------------------------------------------------------------------
 
@@ -94,16 +145,47 @@ SORT_ORDERS = {
 }
 
 
-def list_comments(sort="newest", min_rating=None, limit=None, offset=0):
-    """Return comments, optionally filtered by rating and paged."""
+def list_comments(sort="newest", min_rating=None, limit=None, offset=0,
+                  blocked=None, search=None):
+    """Return comments, optionally filtered and paged.
+
+    blocked says which comments are wanted: None for all of them, False for
+    only the ones visitors can read, True for only the blocked ones. The
+    moderator's page asks for each of the three at different moments. The
+    public pages ask for all of them and hide the text of the blocked ones
+    instead, so that a visitor can see something was taken down.
+
+    search matches a word anywhere in the name or the comment. Only the
+    moderator's page uses it.
+
+    The conditions are gathered in a list and joined with AND rather than being
+    glued on to the SQL one at a time, because there can now be several of them
+    and only the first one is allowed to say WHERE.
+    """
     order_by = SORT_ORDERS.get(sort, SORT_ORDERS["newest"])
 
-    sql = "SELECT id, date, name, comment, rating FROM comments"
+    sql = "SELECT id, date, name, comment, rating, blocked FROM comments"
+    conditions = []
     args = []
 
     if min_rating is not None:
-        sql += " WHERE rating >= ?"
+        conditions.append("rating >= ?")
         args.append(min_rating)
+
+    if blocked is not None:
+        conditions.append("blocked = ?")
+        args.append(1 if blocked else 0)
+
+    if search:
+        # The % signs go into the value we hand to SQLite, never into the SQL
+        # itself, so whatever somebody types in the search box is only ever
+        # treated as text to look for.
+        conditions.append("(name LIKE ? OR comment LIKE ?)")
+        args.append("%" + search + "%")
+        args.append("%" + search + "%")
+
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
 
     sql += " ORDER BY " + order_by
 
@@ -120,20 +202,38 @@ def list_comments(sort="newest", min_rating=None, limit=None, offset=0):
 def get_comment(comment_id):
     """Return one comment by id, or None if that id does not exist."""
     return query_one(
-        "SELECT id, date, name, comment, rating FROM comments WHERE id = ?",
+        "SELECT id, date, name, comment, rating, blocked FROM comments WHERE id = ?",
         (comment_id,),
     )
 
 
-def count_comments():
-    """How many comments there are in total - used on the homepage."""
-    row = query_one("SELECT COUNT(*) AS total FROM comments")
+def count_comments(blocked=None):
+    """How many comments there are - used on the homepage and the admin page.
+
+    blocked works exactly as it does in list_comments(): None counts them all,
+    False counts only the ones visitors can read, True only the blocked ones.
+    """
+    sql = "SELECT COUNT(*) AS total FROM comments"
+    args = ()
+    if blocked is not None:
+        sql += " WHERE blocked = ?"
+        args = (1 if blocked else 0,)
+    row = query_one(sql, args)
     return row["total"] if row else 0
 
 
-def average_rating():
-    """The average rating, or None when there are no comments yet."""
-    row = query_one("SELECT AVG(rating) AS average FROM comments")
+def average_rating(blocked=None):
+    """The average rating, or None when there is nothing to average.
+
+    The homepage passes blocked=False: a comment a moderator has taken down
+    should not go on quietly affecting the headline figure.
+    """
+    sql = "SELECT AVG(rating) AS average FROM comments"
+    args = ()
+    if blocked is not None:
+        sql += " WHERE blocked = ?"
+        args = (1 if blocked else 0,)
+    row = query_one(sql, args)
     if row is None or row["average"] is None:
         return None
     return round(row["average"], 1)
@@ -185,10 +285,69 @@ def update_comment(comment_id, data):
     return get_comment(comment_id)
 
 
+def set_blocked(comment_id, blocked):
+    """Hide a comment from visitors, or put it back. Returns the row, or None.
+
+    This is deliberately a function of its own rather than another field in
+    update_comment(). Blocking is not editing: a moderator may take a comment
+    down, but the words stay exactly as the person wrote them. Keeping the two
+    apart is what makes that impossible to get wrong later.
+    """
+    _, affected = execute(
+        "UPDATE comments SET blocked = ? WHERE id = ?",
+        (1 if blocked else 0, comment_id),
+    )
+    if affected == 0:
+        return None
+    return get_comment(comment_id)
+
+
 def delete_comment(comment_id):
     """Delete a comment. Returns True if there was one to delete."""
     _, affected = execute("DELETE FROM comments WHERE id = ?", (comment_id,))
     return affected > 0
+
+
+# ---------------------------------------------------------------------------
+# Administrators
+# ---------------------------------------------------------------------------
+#
+# Only the hash of a password is ever stored or handed back. The hashing itself
+# does not happen here: it belongs with the code that has the typed-in password
+# in its hands, which is app.py when somebody logs in and create_admin.py when
+# somebody sets one.
+
+def get_admin(username):
+    """Look up one administrator by name, or None if there is no such account."""
+    return query_one(
+        "SELECT id, username, password_hash, created FROM admins WHERE username = ?",
+        (username,),
+    )
+
+
+def count_admins():
+    """How many administrator accounts exist."""
+    row = query_one("SELECT COUNT(*) AS total FROM admins")
+    return row["total"] if row else 0
+
+
+def create_or_update_admin(username, password_hash):
+    """Add an administrator, or give an existing one a new password.
+
+    Returns True if the account was created and False if an existing one was
+    updated, which is all create_admin.py needs in order to say which it did.
+
+    ON CONFLICT means "if a row with this username already exists, update it
+    rather than failing", so resetting a forgotten password needs no separate
+    command.
+    """
+    existed = get_admin(username) is not None
+    execute(
+        "INSERT INTO admins (username, password_hash, created) VALUES (?, ?, ?) "
+        "ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash",
+        (username, password_hash, datetime.now().isoformat(timespec="seconds")),
+    )
+    return not existed
 
 
 # ---------------------------------------------------------------------------

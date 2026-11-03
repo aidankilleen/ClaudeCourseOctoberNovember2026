@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Delete comment {{ comment.id }} &mdash; Comment Book{% endblock %}
+
+{% block content %}
+
+<h1>Delete this comment?</h1>
+
+{# The comment is shown exactly as it is stored, in the same card the public
+   pages use, so that there is no doubt about which one is about to go. #}
+<ul class="comment-list">
+    <li class="comment">
+        <div class="comment-head">
+            <span class="comment-name">{{ comment.name }}</span>
+            <span class="comment-rating" title="{{ comment.rating }} out of 5">{{ comment.rating|stars }}</span>
+        </div>
+        <p class="comment-text">{{ comment.comment }}</p>
+        <p class="comment-date">
+            {{ comment.date|friendly_date }}
+            <span class="comment-id">#{{ comment.id }}</span>
+        </p>
+    </li>
+</ul>
+
+<div class="errors">
+    <p><strong>This cannot be undone.</strong> The comment is removed from the
+       database for good. If you only want visitors to stop seeing it, go back
+       and block it instead &mdash; that can be reversed at any time.</p>
+</div>
+
+<form method="post"
+      action="{{ url_for('admin_delete_comment', comment_id=comment.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {# The current search, carried through so that cancelling or confirming
+       both land back on the view the moderator was looking at. #}
+    <input type="hidden" name="q" value="{{ search }}">
+    <input type="hidden" name="status" value="{{ status }}">
+    <input type="hidden" name="sort" value="{{ sort }}">
+
+    <div class="form-actions">
+        <button type="submit" class="button big danger">Yes, delete it</button>
+        <a class="cancel" href="{{ url_for('admin_page', q=search or None,
+                                           status=status, sort=sort) }}">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}
