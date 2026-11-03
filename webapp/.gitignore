@@ -1,0 +1,10 @@
+# The database is data, not source. It is built by seed.py and it changes
+# every time somebody uses the API, so it must never be committed.
+courses.db
+courses.db-journal
+
+# Python leftovers.
+__pycache__/
+*.pyc
+venv/
+.venv/

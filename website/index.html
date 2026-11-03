@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claude Code in Practice</title>
+<meta name="description" content="A three-day course in Claude Code for people who do not write code. Dublin and online, autumn 2026." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+/* ---------------------------------------------------------------------------
+   Design tokens. Change a value here and it changes everywhere on the page.
+   The palette is deliberately small: petrol-green ink on white paper, with a
+   single highlighter yellow used once, on the line that matters most.
+   --------------------------------------------------------------------------- */
+:root {
+  --ink:      #08312e;
+  --ink-soft: #2f5a56;
+  --paper:    #ffffff;
+  --panel:    #f3f6f4;
+  --mark:     #ffe14d;
+  --rule:     #d5ded9;
+
+  /* A modular type scale. Sizes flex with the viewport, so the page reads
+     well on a phone without needing a separate set of mobile rules. */
+  --t-display: clamp(2.75rem, 7vw, 5.5rem);
+  --t-h2:      clamp(1.75rem, 3.2vw, 2.6rem);
+  --t-h3:      1.25rem;
+  --t-body:    1.0625rem;
+  --t-small:   0.875rem;
+
+  /* 48ch, not 64ch: the ch unit is the width of a zero, which is wider than
+     the average letter, so 48ch lands at roughly 65 characters a line. */
+  --measure: 48ch;
+  --gutter: clamp(1.25rem, 5vw, 5rem);
+}
+
+/* A reset, kept to the few rules that actually matter here. */
+*, *::before, *::after { box-sizing: border-box; }
+body, h1, h2, h3, p, ul, dl, dd { margin: 0; padding: 0; }
+ul { list-style: none; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: var(--t-body);
+  line-height: 1.65;
+  /* Stops a long word forcing a sideways scrollbar on a narrow screen. */
+  overflow-wrap: break-word;
+}
+
+/* Everything sits in one measured column, so the page has a single spine. */
+.wrap {
+  max-width: 68rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Someone navigating by keyboard has to be able to see where they are. */
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* ------------------------------- masthead -------------------------------- */
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-block: 1.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+.masthead__name {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.masthead__where {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+}
+
+/* --------------------------------- hero ---------------------------------- */
+.hero {
+  display: grid;
+  gap: clamp(2.5rem, 6vw, 4.5rem);
+  padding-block: clamp(3.5rem, 9vw, 7rem) clamp(3rem, 7vw, 5.5rem);
+  align-items: start;
+}
+@media (min-width: 60rem) {
+  .hero { grid-template-columns: 1fr 1fr; }
+}
+
+.hero__title {
+  font-family: "Fraunces", Georgia, serif;
+  font-variation-settings: "opsz" 120;
+  font-weight: 600;
+  font-size: var(--t-display);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.hero__standfirst {
+  max-width: 34ch;
+  margin-top: 1.5rem;
+  font-size: 1.1875rem;
+  color: var(--ink-soft);
+}
+
+/* The button says exactly what happens when you press it. */
+.cta {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 0.85rem 1.6rem;
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+  font-weight: 500;
+  border: 2px solid var(--ink);
+  transition: background 120ms linear, color 120ms linear;
+}
+.cta:hover { background: var(--paper); color: var(--ink); }
+
+.note {
+  margin-top: 1rem;
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+}
+
+/* ------------------------------ transcript -------------------------------
+   The one dark object on the page, and the only piece of real evidence it
+   offers: an ordinary person typing ordinary sentences, and a server
+   answering them.
+   -------------------------------------------------------------------------- */
+.transcript {
+  background: var(--ink);
+  color: #e8f0ec;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  padding: 1.5rem clamp(1.25rem, 3vw, 2rem) 1.75rem;
+}
+.transcript__chrome {
+  display: block;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(232, 240, 236, 0.22);
+  font-size: 0.8125rem;
+  color: rgba(232, 240, 236, 0.62);
+}
+.transcript__line { display: block; }
+
+/* The prompt character is drawn by CSS rather than typed, so it is not picked
+   up if a reader copies the example text. */
+.transcript__line--in::before {
+  content: "> ";
+  color: var(--mark);
+}
+/* A hanging indent, so that a long instruction wrapping onto a second line
+   still lines up under the first word rather than under the prompt. */
+.transcript__line--in {
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+.transcript__line--out {
+  color: rgba(232, 240, 236, 0.62);
+  padding-left: 1.25ch;
+}
+.transcript__gap { display: block; height: 0.8rem; }
+
+/* The single bold moment on the page: the result, marked the way a teacher
+   marks the one line that matters on a handout. */
+.transcript__result {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.18em 0.55em;
+  background: var(--mark);
+  color: var(--ink);
+  font-weight: 500;
+  transform: rotate(-0.6deg);
+}
+
+/* The reveal runs once, on load. It is the only motion here that the visitor
+   did not ask for, and it does not run at all if they prefer less of it. */
+.js .transcript__line,
+.js .transcript__result { opacity: 0; }
+.js .is-shown { opacity: 1; transition: opacity 200ms linear; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js .transcript__line,
+  .js .transcript__result { opacity: 1; }
+  .js .is-shown { transition: none; }
+  .cta { transition: none; }
+}
+
+/* -------------------------------- sections -------------------------------- */
+.section {
+  padding-block: clamp(3rem, 7vw, 5.5rem);
+  border-top: 1px solid var(--rule);
+}
+.section__title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: var(--t-h2);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  max-width: 20ch;
+}
+.section__intro {
+  max-width: var(--measure);
+  margin-top: 1rem;
+  color: var(--ink-soft);
+}
+
+/* What you build. Three parallel things, so they are deliberately not
+   numbered: a hairline between them carries the separation instead. */
+.builds { margin-top: 3rem; }
+.build {
+  display: grid;
+  gap: 0.5rem 3rem;
+  padding-block: 2rem;
+  border-top: 1px solid var(--rule);
+}
+/* No rule under the last one: the next section's own top rule closes the list,
+   and two hairlines a few pixels apart read as a mistake. */
+@media (min-width: 48rem) {
+  .build { grid-template-columns: 14rem 1fr; }
+}
+.build__what {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+  padding-top: 0.3rem;
+}
+.build__title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--t-h3);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.build__body { max-width: var(--measure); margin-top: 0.35rem; }
+
+/* Who it is for. The right-hand column is the one most course pages leave
+   out, which is exactly why it earns its place. */
+.fit { margin-top: 2.5rem; display: grid; gap: 2.5rem; }
+@media (min-width: 48rem) { .fit { grid-template-columns: 1fr 1fr; gap: 4rem; } }
+.fit__head {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--t-h3);
+  font-weight: 600;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--ink);
+}
+.fit li { padding-block: 0.65rem; border-bottom: 1px solid var(--rule); }
+
+/* The schedule genuinely is a sequence, so here the days are numbered. */
+.days { margin-top: 2.5rem; }
+.day {
+  display: grid;
+  gap: 0.4rem 3rem;
+  padding-block: 1.75rem;
+  border-top: 1px solid var(--rule);
+}
+/* This one keeps its rule: the practicalities panel follows immediately
+   below it, so the list needs closing before the panel starts. */
+.day:last-child { border-bottom: 1px solid var(--rule); }
+@media (min-width: 48rem) { .day { grid-template-columns: 8rem 1fr; } }
+.day__n {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+  padding-top: 0.25rem;
+}
+.day__title { font-weight: 500; }
+.day__body { max-width: var(--measure); color: var(--ink-soft); }
+
+/* Practicalities, as a description list, because that is what they are. */
+.facts {
+  margin-top: 2.5rem;
+  background: var(--panel);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+.facts dl { display: grid; }
+@media (min-width: 40rem) { .facts dl { grid-template-columns: 11rem 1fr; } }
+.facts dt {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+  padding-block: 0.7rem;
+}
+.facts dd { padding-block: 0.7rem; }
+@media (max-width: 39.99rem) {
+  .facts dt { padding-bottom: 0; }
+  .facts dd { padding-top: 0.15rem; padding-bottom: 0.9rem; }
+}
+
+/* -------------------------------- booking --------------------------------- */
+.book { padding-block: clamp(3.5rem, 8vw, 6rem); border-top: 1px solid var(--rule); }
+.book__title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: var(--t-h2);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  max-width: 18ch;
+}
+.book__body { max-width: var(--measure); margin-top: 1rem; color: var(--ink-soft); }
+a.plain { color: var(--ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+.colophon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  justify-content: space-between;
+  padding-block: 2rem 3rem;
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="masthead__name">Claude Code in Action</div>
+    <div class="masthead__where">Cork, Dublin and online, autumn 2026</div>
+  </header>
+
+  <main>
+
+    <!-- The transcript does the arguing. The headline only frames it. -->
+    <section class="hero">
+      <div>
+        <h1 class="hero__title">Three days. Not one semicolon.</h1>
+        <p class="hero__standfirst">
+          A working course in Claude Code for people who have never written
+          software and do not intend to start.
+        </p>
+        <a class="cta" href="#book">Book a place</a>
+        <p class="note">Twelve people maximum. The next course begins 9 November 2026.</p>
+      </div>
+
+      <figure class="transcript" aria-label="A transcript: four plain-English instructions that set up and secured a web server">
+        <span class="transcript__chrome">A delegate&rsquo;s second afternoon, in full</span>
+
+        <span class="transcript__line transcript__line--in">connect to my server, username ptadmin</span>
+        <span class="transcript__line transcript__line--out">Connected. Ubuntu, up 26 days.</span>
+        <span class="transcript__gap"></span>
+
+        <span class="transcript__line transcript__line--in">is there a webserver on this machine?</span>
+        <span class="transcript__line transcript__line--out">nginx is installed, but it is not running.</span>
+        <span class="transcript__gap"></span>
+
+        <span class="transcript__line transcript__line--in">set it up and start it</span>
+        <span class="transcript__line transcript__line--in">now add https</span>
+
+        <span class="transcript__result">A live site, with a padlock, before the break.</span>
+      </figure>
+    </section>
+
+    <!-- Three parallel artefacts, deliberately unnumbered. -->
+    <section class="section" id="build">
+      <h2 class="section__title">You leave with three things that work</h2>
+      <p class="section__intro">
+        Not exercises that get thrown away on Friday. Each of these still runs
+        after you go home, and you understand it well enough to change it.
+      </p>
+
+      <div class="builds">
+        <article class="build">
+          <p class="build__what">a website, on the internet</p>
+          <div>
+            <h3 class="build__title">A site at your own address</h3>
+            <p class="build__body">
+              You describe the site you want, then put it on a real server with a
+              real domain and a real certificate. You will break it at least once
+              and put it back, which is the part that teaches you something.
+            </p>
+          </div>
+        </article>
+
+        <article class="build">
+          <p class="build__what">a tool you keep</p>
+          <div>
+            <h3 class="build__title">Something that reads your invoices</h3>
+            <p class="build__body">
+              Point it at a folder of supplier PDFs, each one laid out
+              differently, and get back a single tidy spreadsheet. You build it,
+              then you make it survive an invoice it has never seen before.
+            </p>
+          </div>
+        </article>
+
+        <article class="build">
+          <p class="build__what">a method</p>
+          <div>
+            <h3 class="build__title">A way through a pile of documents</h3>
+            <p class="build__body">
+              Contracts, receipts, scans and photographs, turned into a summary
+              with every claim traced back to the page it came from. Useful the
+              week you return.
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="fit">
+      <h2 class="section__title">Whether this is your course</h2>
+
+      <div class="fit">
+        <div>
+          <h3 class="fit__head">Come if</h3>
+          <ul>
+            <li>You have work that is obviously repetitive, obviously automatable, and nobody to hand it to.</li>
+            <li>You can describe what you want precisely, in English.</li>
+            <li>You are willing to read what the computer did before you agree to it.</li>
+            <li>You have a laptop you are allowed to install things on.</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="fit__head">Skip it if</h3>
+          <ul>
+            <li>You write software for a living. You will be bored by lunch on day one.</li>
+            <li>You want a certificate more than you want a working tool.</li>
+            <li>You are hoping to approve the output without reading it. That is the one habit this course will not give you.</li>
+            <li>Your employer blocks command-line tools and will not make an exception.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- A real sequence, so these are numbered. -->
+    <section class="section" id="days">
+      <h2 class="section__title">The three days</h2>
+
+      <div class="days">
+        <article class="day">
+          <p class="day__n">Day one</p>
+          <div>
+            <p class="day__title">Asking for things well</p>
+            <p class="day__body">
+              The terminal, and why it stops being frightening by about eleven
+              o&rsquo;clock. How to describe a task so that the answer is the one
+              you wanted. Reading a plan before you approve it, and saying no.
+            </p>
+          </div>
+        </article>
+
+        <article class="day">
+          <p class="day__n">Day two</p>
+          <div>
+            <p class="day__title">Building it, and putting it somewhere</p>
+            <p class="day__body">
+              From an empty folder to a site other people can open. Servers,
+              certificates and domains, handled by description rather than by
+              memorised commands. Undoing a bad change calmly.
+            </p>
+          </div>
+        </article>
+
+        <article class="day">
+          <p class="day__n">Day three</p>
+          <div>
+            <p class="day__title">Your own work, on your own files</p>
+            <p class="day__body">
+              You bring the job you actually want done. You leave having built
+              it, tested it against the awkward cases, and written down enough
+              that a colleague can run it without you.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="facts">
+        <dl>
+          <dt>Dates</dt>
+          <dd>9 to 11 November 2026, or 7 to 9 December 2026</dd>
+
+          <dt>Hours</dt>
+          <dd>09:30 to 16:30, with an hour for lunch</dd>
+
+          <dt>Where</dt>
+          <dd>Dublin city centre, or online across the same three days</dd>
+
+          <dt>Group size</dt>
+          <dd>Twelve, so everybody gets their own problem looked at</dd>
+
+          <dt>Fee</dt>
+          <dd>&euro;1,450 a person, lunch and materials included</dd>
+
+          <dt>Bring</dt>
+          <dd>A laptop you can install software on, and one piece of real work</dd>
+        </dl>
+      </div>
+    </section>
+
+  </main>
+
+  <section class="book" id="book">
+    <h2 class="book__title">Take one of the twelve places</h2>
+    <p class="book__body">
+      Tell us which dates suit, and what you are hoping to automate. We will say
+      honestly whether this is the right course for it before you pay anything.
+    </p>
+    <a class="cta" href="mailto:hello@aitrainingcourses.ie?subject=Claude%20Code%20in%20Practice">Email about a place</a>
+    <p class="note">
+      Or write to <a class="plain" href="mailto:hello@aitrainingcourses.ie">hello@aitrainingcourses.ie</a>.
+    </p>
+  </section>
+
+  <footer class="colophon">
+    <span>Claude Code in Practice</span>
+    <span>Run by Professional Training, Ireland</span>
+  </footer>
+
+</div>
+
+<script>
+// The transcript reveals itself once, line by line, because that is how a
+// transcript actually arrives. Everything else on the page is static.
+document.documentElement.classList.add("js");
+
+(function () {
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var lines = document.querySelectorAll(".transcript__line, .transcript__result");
+
+  if (reduced) {
+    lines.forEach(function (el) { el.classList.add("is-shown"); });
+    return;
+  }
+
+  lines.forEach(function (el, i) {
+    setTimeout(function () { el.classList.add("is-shown"); }, 220 + i * 260);
+  });
+})();
+</script>
+
+</body>
+</html>
