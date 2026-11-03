@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Comment Book{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <h1>The Comment Book</h1>
+    <p class="lead">
+        Say what you thought. Read what everyone else thought. Every comment
+        here was left by a visitor, with a rating out of five.
+    </p>
+    <p>
+        <a class="button big" href="{{ url_for('add_comment_page') }}">Leave a comment</a>
+        <a class="button big secondary" href="{{ url_for('comments_page') }}">Read the comments</a>
+    </p>
+</section>
+
+<section class="stats">
+    <div class="stat">
+        <span class="stat-number">{{ total }}</span>
+        <span class="stat-label">{{ "comment" if total == 1 else "comments" }} so far</span>
+    </div>
+    <div class="stat">
+        {# average is None until somebody has left a comment, so there is
+           always something sensible to show. #}
+        <span class="stat-number">{{ average if average is not none else "--" }}</span>
+        <span class="stat-label">average rating out of 5</span>
+    </div>
+</section>
+
+{% if latest %}
+<section>
+    <h2>Most recent</h2>
+    <ul class="comment-list">
+        {% for comment in latest %}
+        <li class="comment">
+            <div class="comment-head">
+                <span class="comment-name">{{ comment.name }}</span>
+                <span class="comment-rating" title="{{ comment.rating }} out of 5">{{ comment.rating|stars }}</span>
+            </div>
+            <p class="comment-text">{{ comment.comment }}</p>
+            <p class="comment-date">{{ comment.date|friendly_date }}</p>
+        </li>
+        {% endfor %}
+    </ul>
+    <p><a href="{{ url_for('comments_page') }}">See all {{ total }} comments &rarr;</a></p>
+</section>
+{% else %}
+<section>
+    <h2>Nothing here yet</h2>
+    <p>No one has left a comment. You could be the first.</p>
+</section>
+{% endif %}
+
+{% endblock %}

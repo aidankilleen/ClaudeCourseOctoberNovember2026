@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+  The shared shell that every page sits inside: the heading, the navigation
+  bar and the footer. Each other template says "extends base.html" and then
+  fills in the content block, so there is only one copy of the layout.
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Comment Book{% endblock %}</title>
+    <!-- url_for works out the address of the stylesheet, so this keeps
+         working if the site ever moves to a sub-folder. -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="wrap">
+        <a class="brand" href="{{ url_for('home') }}">Comment&nbsp;Book</a>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('comments_page') }}">Comments</a>
+            <a class="button" href="{{ url_for('add_comment_page') }}">Leave a comment</a>
+        </nav>
+    </div>
+</header>
+
+<main class="wrap">
+    {# Any one-off message set with flash(), for example after a comment is
+       added. There is usually nothing here at all. #}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <p class="flash">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="wrap">
+        <p>webcommentbook &mdash; a small Flask and SQLite example.
+           The comments are also available as JSON at
+           <code>/api/comments</code>.</p>
+    </div>
+</footer>
+
+</body>
+</html>

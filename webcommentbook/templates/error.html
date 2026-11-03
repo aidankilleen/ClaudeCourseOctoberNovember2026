@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} &mdash; Comment Book{% endblock %}
+
+{% block content %}
+
+<h1>{{ code }}</h1>
+<p class="lead">{{ message }}</p>
+<p><a class="button" href="{{ url_for('home') }}">Back to the homepage</a></p>
+
+{% endblock %}

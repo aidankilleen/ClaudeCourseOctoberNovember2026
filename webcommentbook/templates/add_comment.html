@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Leave a comment &mdash; Comment Book{% endblock %}
+
+{% block content %}
+
+<h1>Leave a comment</h1>
+
+{% if errors %}
+    {# Shown when the form came back from the server with problems. The server
+       is what decides this - the browser checks below are only a convenience. #}
+    <div class="errors">
+        <p><strong>Please fix the following:</strong></p>
+        <ul>
+            {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<form method="post" action="{{ url_for('add_comment_page') }}" class="comment-form">
+
+    <label for="name">Your name</label>
+    {# value= puts back whatever was typed, so a rejected form does not have to
+       be filled in all over again. #}
+    <input type="text" id="name" name="name" maxlength="80" required
+           value="{{ values.name or '' }}">
+
+    <label for="comment">Your comment</label>
+    <textarea id="comment" name="comment" rows="6" maxlength="2000"
+              required>{{ values.comment or '' }}</textarea>
+
+    <fieldset class="rating-field">
+        <legend>Your rating</legend>
+        {% for value in [1, 2, 3, 4, 5] %}
+        <label class="rating-option">
+            <input type="radio" name="rating" value="{{ value }}"
+                   {% if values.rating == value|string %}checked{% endif %} required>
+            <span>{{ value }} {{ value|stars }}</span>
+        </label>
+        {% endfor %}
+    </fieldset>
+
+    <div class="form-actions">
+        <button type="submit" class="button big">Add my comment</button>
+        <a class="cancel" href="{{ url_for('comments_page') }}">Cancel</a>
+    </div>
+
+</form>
+
+{% endblock %}

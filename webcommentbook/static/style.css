@@ -1,0 +1,300 @@
+/* The whole look of the site is in this one hand-written file. There is no
+   CSS framework, so everything you see on the page is explained here.
+
+   Colours are defined once at the top as variables and used by name below, so
+   changing the accent colour is a one-line edit. */
+
+:root {
+    --ink:         #1d2329;   /* ordinary text */
+    --ink-soft:    #5d6a76;   /* dates, captions, anything secondary */
+    --paper:       #f7f5f0;   /* page background - warm rather than white */
+    --card:        #ffffff;   /* comment cards */
+    --accent:      #1f6f5c;   /* buttons and links: a deep green */
+    --accent-dark: #16513f;
+    --star:        #c98a1b;   /* the filled stars */
+    --line:        #e2ddd4;   /* hairline borders */
+    --error-bg:    #fdeceb;
+    --error-ink:   #8e2a24;
+    --flash-bg:    #e8f3ee;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+/* One shared width for the header, the content and the footer, so the three
+   line up down the page. */
+.wrap {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+}
+
+/* --- header and navigation ---------------------------------------------- */
+
+.site-header {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+}
+
+.site-header .wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.brand {
+    font-size: 1.35rem;
+    font-weight: bold;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+}
+
+.site-header nav {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+}
+
+/* The plain nav links are grey. The :not(.button) matters: without it this
+   rule also catches the "Leave a comment" button, which is more specific than
+   the .button rule below and so would paint grey text on the green button -
+   almost unreadable. */
+.site-header nav a:not(.button) {
+    color: var(--ink-soft);
+    text-decoration: none;
+}
+
+.site-header nav a:not(.button):hover { color: var(--accent); }
+
+/* --- buttons ------------------------------------------------------------- */
+
+.button {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    padding: 0.4rem 0.9rem;
+    border: 0;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 0.95rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button:hover { background: var(--accent-dark); color: #fff; }
+
+.button.big { padding: 0.6rem 1.3rem; font-size: 1rem; }
+
+.button.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.button.secondary:hover { background: var(--accent); color: #fff; }
+
+/* --- main content -------------------------------------------------------- */
+
+main.wrap { padding-top: 2.5rem; padding-bottom: 3rem; }
+
+h1 { font-size: 2rem; margin: 0 0 0.6rem; line-height: 1.25; }
+h2 { font-size: 1.3rem; margin: 2.2rem 0 0.8rem; }
+
+a { color: var(--accent); }
+
+.lead { font-size: 1.1rem; color: var(--ink-soft); }
+.muted { color: var(--ink-soft); font-size: 0.95rem; }
+
+.hero { margin-bottom: 2.5rem; }
+.hero p + p { margin-top: 1.4rem; }
+.hero .button { margin-right: 0.5rem; }
+
+/* --- the two numbers on the homepage ------------------------------------ */
+
+.stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.stat {
+    flex: 1 1 10rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.1rem 1.2rem;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    line-height: 1.1;
+}
+
+.stat-label { color: var(--ink-soft); font-size: 0.92rem; }
+
+/* --- comments ------------------------------------------------------------ */
+
+.comment-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.comment {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.1rem 1.2rem;
+    margin-bottom: 0.9rem;
+}
+
+.comment-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.comment-name { font-weight: bold; }
+
+/* The stars are text characters, so they just need a colour and a little
+   extra spacing to read clearly. */
+.comment-rating {
+    color: var(--star);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+}
+
+.comment-text { margin: 0.5rem 0 0.6rem; }
+
+.comment-date {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+}
+
+.comment-id { opacity: 0.6; margin-left: 0.4rem; }
+
+.sort-link { margin-left: 0.35rem; }
+.sort-link.current { font-weight: bold; text-decoration: none; }
+
+/* --- the form ------------------------------------------------------------ */
+
+.comment-form {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.4rem;
+    max-width: 34rem;
+}
+
+.comment-form label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.comment-form input[type="text"],
+.comment-form textarea {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    margin-bottom: 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font: inherit;
+    background: #fff;
+    color: var(--ink);
+}
+
+.comment-form input[type="text"]:focus,
+.comment-form textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.rating-field {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.8rem 1rem 1rem;
+    margin: 0 0 1.2rem;
+}
+
+.rating-field legend { font-weight: bold; font-size: 0.95rem; padding: 0 0.3rem; }
+
+/* Each rating sits on its own line so the stars beside it stay readable. */
+.rating-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+}
+
+.rating-option span { color: var(--star); letter-spacing: 0.06em; }
+
+.form-actions { display: flex; align-items: center; gap: 1rem; }
+.cancel { color: var(--ink-soft); font-size: 0.95rem; }
+
+/* --- messages ------------------------------------------------------------ */
+
+.flash {
+    background: var(--flash-bg);
+    border-left: 4px solid var(--accent);
+    padding: 0.7rem 1rem;
+    margin: 0 0 1.5rem;
+}
+
+.errors {
+    background: var(--error-bg);
+    border-left: 4px solid var(--error-ink);
+    color: var(--error-ink);
+    padding: 0.7rem 1rem;
+    margin: 0 0 1.5rem;
+    max-width: 34rem;
+}
+
+.errors ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+
+/* --- footer -------------------------------------------------------------- */
+
+.site-footer {
+    border-top: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+}
+
+.site-footer .wrap { padding-top: 1.2rem; padding-bottom: 1.2rem; }
+.site-footer p { margin: 0; }
+
+code {
+    background: var(--paper);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+/* --- small screens ------------------------------------------------------- */
+
+@media (max-width: 34rem) {
+    .site-header .wrap { flex-direction: column; align-items: flex-start; }
+    .comment-head { flex-direction: column; gap: 0.15rem; }
+    .hero .button { display: block; margin: 0 0 0.6rem; text-align: center; }
+}

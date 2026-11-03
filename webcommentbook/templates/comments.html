@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}All comments &mdash; Comment Book{% endblock %}
+
+{% block content %}
+
+<h1>All comments</h1>
+
+{% if comments %}
+    <p class="muted">
+        {{ comments|length }} {{ "comment" if comments|length == 1 else "comments" }}.
+        Sort by:
+        {# Each link just sets ?sort= and reloads the page. Anything the
+           application does not recognise falls back to newest first. #}
+        <a class="sort-link {{ 'current' if sort == 'newest' }}"
+           href="{{ url_for('comments_page', sort='newest') }}">newest</a>
+        <a class="sort-link {{ 'current' if sort == 'oldest' }}"
+           href="{{ url_for('comments_page', sort='oldest') }}">oldest</a>
+        <a class="sort-link {{ 'current' if sort == 'rating' }}"
+           href="{{ url_for('comments_page', sort='rating') }}">highest rated</a>
+    </p>
+
+    <ul class="comment-list">
+        {% for comment in comments %}
+        <li class="comment">
+            <div class="comment-head">
+                <span class="comment-name">{{ comment.name }}</span>
+                <span class="comment-rating" title="{{ comment.rating }} out of 5">{{ comment.rating|stars }}</span>
+            </div>
+            <p class="comment-text">{{ comment.comment }}</p>
+            <p class="comment-date">
+                {{ comment.date|friendly_date }}
+                <span class="comment-id">#{{ comment.id }}</span>
+            </p>
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>There are no comments yet.</p>
+    <p><a class="button" href="{{ url_for('add_comment_page') }}">Leave the first one</a></p>
+{% endif %}
+
+{% endblock %}
